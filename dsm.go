@@ -32,8 +32,9 @@ func run(url string, expectedChecksum string) {
 	io.WriteString(h, string(data))
 	actualChecksum := fmt.Sprintf("%x", h.Sum(nil))
 	durationMs := int(time.Since(startedAt).Nanoseconds() / 1000000)
+	fileSizeBytes := len(data)
 
-	saveToDb(startedAt.Unix(), durationMs, expectedChecksum, actualChecksum, 10, "")
+	saveToDb(startedAt.Unix(), durationMs, expectedChecksum, actualChecksum, fileSizeBytes, "")
 
 	if expectedChecksum == actualChecksum {
 		fmt.Println("OK: " + url)
