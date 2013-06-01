@@ -14,7 +14,7 @@ import (
 
 func main() {
 	serverFiles()
-	expectedChecksum := "873d1e9336c929bb418b812f0794212f"
+	expectedChecksum := "61a48e70c0e1e8f980ade96f394c4301"
 
 	startedAt := time.Now().Unix()
 
@@ -27,7 +27,12 @@ func main() {
 	finishedAt := time.Now().Unix()
 
 	saveToDb(startedAt, finishedAt, expectedChecksum, actualChecksum, 10, "")
-	fmt.Printf("%s\n%s\n", expectedChecksum, actualChecksum)
+
+	if expectedChecksum == actualChecksum {
+		fmt.Println("OK")
+	} else {
+		fmt.Println("NOK")
+	}
 
 }
 
