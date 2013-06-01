@@ -9,19 +9,26 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
 	serverFiles()
 	expectedChecksum := "873d1e9336c929bb418b812f0794212f"
+
+	startedAt := time.Now().Unix()
+
 	data := getFile("file")
 	h := md5.New()
 	io.WriteString(h, string(data))
 	actualChecksum := fmt.Sprintf("%x", h.Sum(nil))
 	writeFile("tmp/downloaded_file", data)
 
+	finishedAt := time.Now().Unix()
+
+	saveToDb(startedAt, finishedAt, expectedChecksum, actualChecksum, 10, "")
 	fmt.Printf("%s\n%s\n", expectedChecksum, actualChecksum)
-	doTheDb()
+
 }
 
 func getFile(fileName string) []byte {
@@ -50,15 +57,15 @@ func writeFile(path string, data []byte) {
 	ioutil.WriteFile(path, data, 0755)
 }
 
-func doTheDb() {
+func saveToDb(
+	startedAt int64, finishedAt int64, md5Source string, md5Target string,
+	fileSizeBytes int, errors string) {
 	filename := "db/statistics.db"
 	db, e := sqlite3.Open(filename)
 	if e != nil {
 		log.Fatalf("Creating %v failed with error: %v", db, e)
 	}
-	if _, e = db.Execute("CREATE TABLE foo (id INTEGER PRIMARY KEY ASC, name VARCHAR(10));"); e != nil {
-		log.Fatalf("Create Table foo failed with error: %v", e)
-	}
+
 	db.Close()
 
 	if _, e := os.Stat(filename); e != nil {
@@ -70,7 +77,21 @@ func doTheDb() {
 		log.Fatalf("Reopening %v failed with error: %v", db, e)
 	}
 	defer db.Close()
-	if _, e = db.Execute("INSERT INTO foo (id,name) VALUES ('1', 'John');"); e != nil {
+	template := `
+  INSERT INTO statistics (
+    started_at, finished_at, md5_source, md5_target, file_size_bytes, error_message
+  )
+  VALUES (
+    '%d', '%d', '%s', '%s', '%d', '%s'
+  );`
+	query := fmt.Sprintf(template,
+		startedAt,
+		finishedAt,
+		md5Source,
+		md5Target,
+		fileSizeBytes,
+		errors)
+	if _, e = db.Execute(query); e != nil {
 		log.Fatalf("Insert into foo failed with error: %v", e)
 	}
 }
