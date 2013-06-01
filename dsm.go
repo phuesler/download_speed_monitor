@@ -26,14 +26,14 @@ func main() {
 }
 
 func run(url string, expectedChecksum string) {
-	startedAt := time.Now().Unix()
+	startedAt := time.Now()
 	data := getUrl(url)
 	h := md5.New()
 	io.WriteString(h, string(data))
 	actualChecksum := fmt.Sprintf("%x", h.Sum(nil))
-	finishedAt := time.Now().Unix()
+	durationMs := int(time.Since(startedAt).Nanoseconds() / 1000000)
 
-	saveToDb(startedAt, finishedAt, expectedChecksum, actualChecksum, 10, "")
+	saveToDb(startedAt.Unix(), durationMs, expectedChecksum, actualChecksum, 10, "")
 
 	if expectedChecksum == actualChecksum {
 		fmt.Println("OK: " + url)
@@ -69,7 +69,7 @@ func writeFile(path string, data []byte) {
 }
 
 func saveToDb(
-	startedAt int64, finishedAt int64, md5Source string, md5Target string,
+	startedAt int64, durationMs int, md5Source string, md5Target string,
 	fileSizeBytes int, errors string) {
 	filename := "db/statistics.db"
 	db, e := sqlite3.Open(filename)
@@ -90,14 +90,14 @@ func saveToDb(
 	defer db.Close()
 	template := `
   INSERT INTO statistics (
-    started_at, finished_at, md5_source, md5_target, file_size_bytes, error_message
+    started_at, duration_ms, md5_source, md5_target, file_size_bytes, error_message
   )
   VALUES (
     '%d', '%d', '%s', '%s', '%d', '%s'
   );`
 	query := fmt.Sprintf(template,
 		startedAt,
-		finishedAt,
+		durationMs,
 		md5Source,
 		md5Target,
 		fileSizeBytes,
