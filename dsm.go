@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,8 +11,14 @@ import (
 
 func main() {
 	serverFiles()
-	fmt.Printf("%s", getFile("checksum.md5"))
-	fmt.Printf("%s", getFile("file"))
+	expectedChecksum := "873d1e9336c929bb418b812f0794212f"
+	data := getFile("file")
+	h := md5.New()
+	io.WriteString(h, string(data))
+	actualChecksum := fmt.Sprintf("%x", h.Sum(nil))
+	writeFile("tmp/downloaded_file", data)
+
+	fmt.Printf("%s\n%s\n", expectedChecksum, actualChecksum)
 }
 
 func getFile(fileName string) []byte {
@@ -33,4 +41,8 @@ func getFile(fileName string) []byte {
 func serverFiles() {
 	http.Handle("/", http.FileServer(http.Dir("./tmp/")))
 	go http.ListenAndServe(":8080", nil)
+}
+
+func writeFile(path string, data []byte) {
+	ioutil.WriteFile(path, data, 0755)
 }
