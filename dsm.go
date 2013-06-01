@@ -17,18 +17,15 @@ func main() {
 
 	expectedChecksum := "a0916e3f3181746b5c60aa3296325241"
 	url := "http://localhost:8080/file"
-	c := make(chan int)
 
-	for i := 0; i < 30; i++ {
-		defer func() {
-			<-c
-		}()
-		go run(url, expectedChecksum, c)
+	c := time.Tick(2 * time.Second)
+	for _ = range c {
+		go run(url, expectedChecksum)
 	}
 
 }
 
-func run(url string, expectedChecksum string, c chan int) {
+func run(url string, expectedChecksum string) {
 	startedAt := time.Now().Unix()
 	data := getUrl(url)
 	h := md5.New()
@@ -43,8 +40,6 @@ func run(url string, expectedChecksum string, c chan int) {
 	} else {
 		fmt.Println("NOK" + url)
 	}
-	c <- 1
-
 }
 
 func getUrl(url string) []byte {
