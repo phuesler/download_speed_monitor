@@ -10,22 +10,23 @@ import (
 func main() {
 	serverFiles()
 	fmt.Printf("%s", getFile("checksum.md5"))
+	fmt.Printf("%s", getFile("file"))
 }
 
-func getFile(fileName string) string {
+func getFile(fileName string) []byte {
 	res, err := http.Get("http://localhost:8080/" + fileName)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	robots, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return string(robots)
+	return body
 
 }
 
