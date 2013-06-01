@@ -14,30 +14,37 @@ import (
 
 func main() {
 	serverFiles()
-	expectedChecksum := "61a48e70c0e1e8f980ade96f394c4301"
+
+	expectedChecksum := "a0916e3f3181746b5c60aa3296325241"
+	url := "http://localhost:8080/file"
+
+	for i := 0; i < 10; i++ {
+		go run(url, expectedChecksum)
+	}
+	select {}
+}
+
+func run(url string, expectedChecksum string) {
 
 	startedAt := time.Now().Unix()
-
-	data := getFile("file")
+	data := getUrl(url)
 	h := md5.New()
 	io.WriteString(h, string(data))
 	actualChecksum := fmt.Sprintf("%x", h.Sum(nil))
-	writeFile("tmp/downloaded_file", data)
-
 	finishedAt := time.Now().Unix()
 
 	saveToDb(startedAt, finishedAt, expectedChecksum, actualChecksum, 10, "")
 
 	if expectedChecksum == actualChecksum {
-		fmt.Println("OK")
+		fmt.Println("OK: " + url)
 	} else {
-		fmt.Println("NOK")
+		fmt.Println("NOK" + url)
 	}
 
 }
 
-func getFile(fileName string) []byte {
-	res, err := http.Get("http://localhost:8080/" + fileName)
+func getUrl(url string) []byte {
+	res, err := http.Get(url)
 
 	if err != nil {
 		log.Fatal(err)
