@@ -3,12 +3,12 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
-  "os"
+	"github.com/kuroneko/gosqlite3"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-  "github.com/kuroneko/gosqlite3"
+	"os"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	writeFile("tmp/downloaded_file", data)
 
 	fmt.Printf("%s\n%s\n", expectedChecksum, actualChecksum)
-  doTheDb()
+	doTheDb()
 }
 
 func getFile(fileName string) []byte {
@@ -50,13 +50,13 @@ func writeFile(path string, data []byte) {
 	ioutil.WriteFile(path, data, 0755)
 }
 
-func doTheDb(){
-  filename := "db/statistics.db"
+func doTheDb() {
+	filename := "db/statistics.db"
 	db, e := sqlite3.Open(filename)
 	if e != nil {
 		log.Fatalf("Creating %v failed with error: %v", db, e)
 	}
-	if _, e = db.Execute( "CREATE TABLE foo (id INTEGER PRIMARY KEY ASC, name VARCHAR(10));" ); e != nil {
+	if _, e = db.Execute("CREATE TABLE foo (id INTEGER PRIMARY KEY ASC, name VARCHAR(10));"); e != nil {
 		log.Fatalf("Create Table foo failed with error: %v", e)
 	}
 	db.Close()
@@ -70,7 +70,7 @@ func doTheDb(){
 		log.Fatalf("Reopening %v failed with error: %v", db, e)
 	}
 	defer db.Close()
-	if _, e = db.Execute( "INSERT INTO foo (id,name) VALUES ('1', 'John');" ); e != nil {
+	if _, e = db.Execute("INSERT INTO foo (id,name) VALUES ('1', 'John');"); e != nil {
 		log.Fatalf("Insert into foo failed with error: %v", e)
 	}
 }
